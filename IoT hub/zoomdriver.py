@@ -37,12 +37,15 @@ class ZoomDriver(Driver):
         time.sleep(3)
         ZoomDriver._press_on_button('meeting_id_button.png', confidence=0.5)
         ZoomDriver._write_on_fild(self._meeting_id)
-        time.sleep(3)
-        ZoomDriver._press_on_key('enter')
-        #ZoomDriver._press_on_button('password_btn.png', confidence=0.5)
-        #ZoomDriver._write_on_fild(self._password)
         time.sleep(2)
-
+        ZoomDriver._press_on_key('enter')
+        time.sleep(2)
+        ZoomDriver._press_on_button('password_btn.jpg', confidence=0.9)
+        ZoomDriver._write_on_fild(self._password)
+        time.sleep(2)
+        ZoomDriver._press_on_key('enter')
+        time.sleep(5)
+        ZoomDriver._press_on_button('enter_with_sound_btn.jpg', confidence=0.8)
     @staticmethod
     def turn_off():
         if not ZoomDriver._session_is_running:

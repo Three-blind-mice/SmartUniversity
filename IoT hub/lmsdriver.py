@@ -26,8 +26,9 @@ class LmsDriver(Driver):
 		if not LmsDriver._session_is_running:
 			try:
 				self._browser = webdriver.Chrome(LmsDriver._driver_path)
-			except:
+			except :
 				raise LmsError(DRIVER_NOT_FOUND_ERROR)
+			self._browser.maximize_window()
 			self._link = params['link']
 
 	def turn_on(self):
