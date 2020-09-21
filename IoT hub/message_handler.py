@@ -1,26 +1,22 @@
 import paho.mqtt.client as mqtt
 import json
+from zoomdriver import ZoomDriver
+from lmsdriver import LmsDriver
+from exception import DriverError
 from settings import *
-from zoomdriver import ZoomDriver, DiscordDriver
-
+import datetime
 
 class MessageHandler:
-    """
-    Класс для обработки команд. Команды передаются по протаколу MQTT.
-    Объект данного класса устанавливает соединение с MQTT брокером, подписывается на topic,
-    принимает поступающие в topic сообщения и в соответствии с командой передает управление определенному драйверу
-    Перечень поддерживаемых драйверов указан в словаре driver_dict
-    По завершении обработки запроса объект формирует служебное сообщение на служебный топик о выполнении команды
-    """
-    zoom_driver = ZoomDriver()
-    discord_driver = DiscordDriver()
-    driver_dict = {'zoom': zoom_driver,
-                   'discord': discord_driver}
-    commands_dictionary = {'ON': lambda driver: driver.turn_on,
-                           'OFF': lambda driver: driver.turn_off}
+    _driver_dict = {'zoom': ZoomDriver,
+                    'lms': LmsDriver}
+    _commands_dictionary = {'ON': lambda driver: driver.turn_on,
+                            'OFF': lambda driver: driver.turn_off}
+    _commands_topic = ''
+    _response_topic = ''
 
     def __init__(self, topic):
-        MessageHandler.commands_topic = topic
+        MessageHandler._commands_topic = mqtt_command_topic.format(topic)
+        MessageHandler._response_topic = mqtt_response_topic
         self.client = mqtt.Client(protocol=mqtt.MQTTv311)
         self.client.on_connect = MessageHandler.on_connect
         self.client.on_message = MessageHandler.on_message
@@ -31,38 +27,49 @@ class MessageHandler:
 
     @staticmethod
     def on_message(client, userdata, msg):
-        if msg.topic == MessageHandler.commands_topic:
-            print("Received message payload:{0}".format(str(msg.payload)))
+        response = ''
+        if msg.topic == MessageHandler._commands_topic:
+            print("{0}: Received message payload: {1}".format(datetime.datetime.now().time(), str(msg.payload)))
             try:
                 message_dictionary = json.loads(msg.payload)
                 driver_key = message_dictionary['driver'].lower()
                 command = message_dictionary['command']
                 params = message_dictionary['params']
-                driver = MessageHandler.driver_dict[driver_key]
-                driver.set_params(params)
-                if command in MessageHandler.commands_dictionary:
-                    method = MessageHandler.commands_dictionary[command](driver)
-                    response = 'Command {0} executed with code: {1}'.format(command, method())
-                    print(response)
+                sender_id = message_dictionary['id']
+                driver = MessageHandler._driver_dict[driver_key]()
+                if command in MessageHandler._commands_dictionary:
+                    driver.set_session(params)
+                    method = MessageHandler._commands_dictionary[command](driver)
+                    method()
+                    response = 'Command {0} successfully executed'.format(command)
                 else:
-                    response = '{0}; {1}'.format(UNSUPPORTED_COMMAND_ERROR, command)
-                    print(response)
+                    response = 'Command {0} is unsupported command'.format(command)
             except KeyError:
-                response = MESSAGE_FORMAT_ERROR
-                MessageHandler.publish_response(response=response)
-                print(response)
+                response = 'Wrong format of message'
+            except DriverError as err:
+                response = err.txt
+            except Exception as err:
+                print(err)
+                response = 'Unknown error'
+        print('{0}: {1}'.format(datetime.datetime.now().time(), response))
+        MessageHandler.publish_response(client, response, sender_id)
 
-        MessageHandler.publish_response(command, response)
+    @staticmethod
+    def publish_response(client, response, sender_id):
+        json_string = {
+            "answer": response,
+            "id": sender_id,
+        }
+        message = json.dumps(json_string)
+        client.publish(topic=MessageHandler._response_topic, payload=message)
+        print('{0}: Sent message: {1} on topic: {2}'.format(datetime.datetime.now().time(), message, MessageHandler._response_topic))
+
     @staticmethod
     def on_connect(client, userdata, flags, rc):
-        print('Connected with rc: {}'.format((rc)))
+        print('{0}: Connected with rc: {1}'.format(datetime.datetime.now().time(), rc))
         if rc == mqtt.CONNACK_ACCEPTED:
-            client.subscribe(MessageHandler.commands_topic)
-            print('Subscribed on topic: {}'.format(MessageHandler.commands_topic))
-    @staticmethod
-    def publish_response(command=None, response=None):
-        pass
-        #self.client.publish(topic=mqtt_topic_execute_command, payload=response)
+            client.subscribe(MessageHandler._commands_topic)
+            print('{0}: Subscribed on topic: {1}'.format(datetime.datetime.now().time(), MessageHandler._commands_topic))
 
     def get_message(self):
         self.client.loop()
