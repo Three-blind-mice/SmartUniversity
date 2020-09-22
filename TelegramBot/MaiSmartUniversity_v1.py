@@ -105,12 +105,12 @@ def send_welcome(message):
     предлагает пользователю выбрать платоформу"""
     if (message.text == '/send') or (message.text == 'Запустить новую трансляцию'):
         url = "http://"+str(config.REST_SERVER)+":"+str(config.REST_PORT)+"/users_list/" + str(message.chat.id)
-        statement = bool(requests.get(url).text)
+        statement = requests.get(url).text
 
-        if statement == True:
+        if statement == "True":
             msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
             bot.register_next_step_handler(msg, check_platform_step)
-        elif statement == False:
+        elif statement == "False":
             bot.send_message(message.chat.id, 'Уходи')
         else:
             bot.send_message(message.chat.id, 'Меня сломали')
