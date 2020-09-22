@@ -3,10 +3,9 @@ from settings import *
 
 app = Flask(__name__)
 
-with open('users_list.json') as f:
-	users_list = json.load(f)
-
 def check(id) -> str: # Проверка на наличие в списке
+	with open('users_list.json') as f:
+		users_list = json.load(f)
 	id = str(id)
 	for user in users_list:
 		if user["id"] == id:
