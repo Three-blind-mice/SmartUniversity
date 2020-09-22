@@ -1,9 +1,9 @@
-TOKEN = '1314559230:AAE9bLqadcLXVzAzJzhj_ncnGZ4peE8hxhs' # bot token from @BotFather
+TOKEN = '...' # bot token from @BotFather
 
-USER = 'iunddsnu'
-PASSWORD = '7FpJGsEHSxQA'
+USER = '...' #логин mqtt
+PASSWORD = '...'#пароль mqtt
 
-SERVER = 'hairdresser.cloudmqtt.com'
-PORT = 15636
+SERVER = '...'#сервер mqtt
+PORT = ...
 
-admin_id = 967248282
+
