@@ -6,4 +6,7 @@ PASSWORD = '...'#пароль mqtt
 SERVER = '...'#сервер mqtt
 PORT = ...
 
+REST_SERVER = '...'#localhost 
+REST_PORT = '...'#5000
+
 
