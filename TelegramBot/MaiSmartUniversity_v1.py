@@ -7,14 +7,6 @@ import json
 from telebot import types
 
 
-def check(id, users_list) -> bool:
-    """Функция проверки пользователя в базе преподавателя"""
-    for user in users_list:
-        if user["id"] == id:
-            return True
-    return False
-
-
 bot = telebot.TeleBot(config.TOKEN)
 user_dict = {}
 client = mqtt.Client()
@@ -112,11 +104,8 @@ def send_welcome(message):
     """Бот проверяет наличие пользователя в базе преподавателей, если он там есть, то
     предлагает пользователю выбрать платоформу"""
     if (message.text == '/send') or (message.text == 'Запустить новую трансляцию'):
-
-        url = "http://127.0.0.1:5000/users_list"
-        users_list = json.loads(requests.get(url).text)
-
-        statement = check(str(message.chat.id), users_list)
+        url = "http://"+str(config.REST_SERVER)+":"+str(config.REST_PORT)+"/users_list/" + str(message.chat.id)
+        statement = bool(requests.get(url).text)
 
         if statement == True:
             msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
