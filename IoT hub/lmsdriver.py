@@ -62,12 +62,12 @@ class LmsDriver(Driver):
 		self._press_log_in_button()
 
 	def _set_username(self, username):
-		self._set_textbo_text("username", username)
+		self._set_textbox_text("username", username)
 
 	def _set_password(self, password):
-		self._set_textbo_text("password", password)
+		self._set_textbox_text("password", password)
 
-	def _set_textbo_text(self, textboxName, text):
+	def _set_textbox_text(self, textboxName, text):
 		textbox = self._browser.find_element_by_id(textboxName)
 		if textbox is None:
 			raise LmsError(ELEMENT_NOT_FOUND)
