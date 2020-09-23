@@ -4,6 +4,7 @@ from exception import LmsError
 from selenium.webdriver.chrome.webdriver import WebDriver
 from settings import *
 import os
+import time
 
 
 class LmsDriver(Driver):
@@ -24,6 +25,7 @@ class LmsDriver(Driver):
 
 	def set_session(self, params):
 		if not LmsDriver._session_is_running:
+			print(LmsDriver._driver_path)
 			try:
 				self._browser = webdriver.Chrome(LmsDriver._driver_path)
 			except :
@@ -47,6 +49,9 @@ class LmsDriver(Driver):
 				print(err)
 				raise LmsError(WRONG_LINK_ERROR)
 			LmsDriver._authorized = True
+			self._press_join_conference_button()
+			time.sleep(5)
+			self._press_audio_only_button()
 		LmsDriver._session_is_running = True
 
 	def turn_off(self):
@@ -79,6 +84,14 @@ class LmsDriver(Driver):
 			raise LmsError(ELEMENT_NOT_FOUND)
 		login_button.click()
 
+	def _press_join_conference_button(self):
+		join_button = self._browser.find_element_by_id("join_button_input")
+		if join_button is None:
+			raise LmsError(ELEMENT_NOT_FOUND)
+		join_button.click()
 
-
-
+	def _press_audio_only_button(self):
+		audio_button = self._browser.find_element_by_xpath("//button[@aria-label='Listen only']")
+		if audio_button is None:
+			raise LmsError(ELEMENT_NOT_FOUND)
+		audio_button.click()
