@@ -11,8 +11,8 @@ class LmsDriver(Driver):
 	"""Драйвер для работы с LMS MAI через браузер и установленный соответсвующий веб-драйвер."""
 	_link: object
 	_browser: WebDriver
-	_username = 'st649687'
-	_password = 'andrey123'
+	_username = lms_user_login
+	_password = lms_user_password
 	_module_path = str(os.path.realpath(__file__)).split('\\')
 	_driver_path = '/'.join(_module_path[:-1]) + '/' + 'driver.exe'
 	_session_is_running = False
