@@ -17,6 +17,7 @@ class LmsDriver(Driver):
 	_driver_path = '/'.join(_module_path[:-1]) + '/' + 'driver.exe'
 	_session_is_running = False
 	_authorized = False
+	_tabs_opened = 0
 
 	def __new__(cls, *args, **kwargs):
 		if not hasattr(cls, '_inst'):
@@ -39,6 +40,7 @@ class LmsDriver(Driver):
 		if LmsDriver._authorized:
 			try:
 				self._browser.get(LmsDriver._link)
+				self._tabs_opened += 1
 			except:
 				raise LmsError(WRONG_LINK_ERROR)
 		else:
@@ -57,7 +59,7 @@ class LmsDriver(Driver):
 	def turn_off(self):
 		if not LmsDriver._session_is_running:
 			raise LmsError(ALREADY_CLOSED_ERROR)
-		self._browser.close()
+		self.close_all_tabs()
 		LmsDriver._session_is_running = False
 
 	def _authorize(self, username, password):
@@ -89,9 +91,22 @@ class LmsDriver(Driver):
 		if join_button is None:
 			raise LmsError(ELEMENT_NOT_FOUND)
 		join_button.click()
+		self._tabs_opened += 1
+
 
 	def _press_audio_only_button(self):
-		audio_button = self._browser.find_element_by_xpath("//button[@aria-label='Listen only']")
+		self._switch_webdriver_tab(1)
+		audio_button = self._browser.find_element_by_xpath('//button[@aria-label="Listen only"]')
 		if audio_button is None:
 			raise LmsError(ELEMENT_NOT_FOUND)
 		audio_button.click()
+
+	def _switch_webdriver_tab(self, id):
+		window_after = self._browser.window_handles[id]
+		self._browser.switch_to.window(window_after)
+
+	def close_all_tabs(self):
+		while self._tabs_opened >= 0:
+			self._switch_webdriver_tab(0)
+			self._browser.close()
+			self._tabs_opened -= 1
