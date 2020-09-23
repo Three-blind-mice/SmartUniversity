@@ -41,16 +41,15 @@ class MessageHandler:
                     driver.set_session(params)
                     method = MessageHandler._commands_dictionary[command](driver)
                     method()
-                    response = 'Command {0} successfully executed'.format(command)
+                    response = 'Команда {0} была успешно выполнена'.format(command)
                 else:
-                    response = 'Command {0} is unsupported command'.format(command)
+                    response = 'Команда {0} не поддерживатся'.format(command)
             except KeyError:
-                response = 'Wrong format of message'
+                response = 'Неправильный формат сообщения'
             except DriverError as err:
                 response = err.txt
             except Exception as err:
-                print(err)
-                response = 'Unknown error'
+                response = 'Неизвестная ошибка: {0}'.format(err)
         print('{0}: {1}'.format(datetime.datetime.now().time(), response))
         MessageHandler.publish_response(client, response, sender_id)
 

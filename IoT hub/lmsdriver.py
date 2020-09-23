@@ -4,18 +4,20 @@ from exception import LmsError
 from selenium.webdriver.chrome.webdriver import WebDriver
 from settings import *
 import os
+import time
 
 
 class LmsDriver(Driver):
 	"""Драйвер для работы с LMS MAI через браузер и установленный соответсвующий веб-драйвер."""
 	_link: object
 	_browser: WebDriver
-	_username = 'st649687'
-	_password = 'andrey123'
+	_username = lms_user_login
+	_password = lms_user_password
 	_module_path = str(os.path.realpath(__file__)).split('\\')
 	_driver_path = '/'.join(_module_path[:-1]) + '/' + 'driver.exe'
 	_session_is_running = False
 	_authorized = False
+	_tabs_opened = 0
 
 	def __new__(cls, *args, **kwargs):
 		if not hasattr(cls, '_inst'):
@@ -24,6 +26,7 @@ class LmsDriver(Driver):
 
 	def set_session(self, params):
 		if not LmsDriver._session_is_running:
+			print(LmsDriver._driver_path)
 			try:
 				self._browser = webdriver.Chrome(LmsDriver._driver_path)
 			except :
@@ -37,6 +40,7 @@ class LmsDriver(Driver):
 		if LmsDriver._authorized:
 			try:
 				self._browser.get(LmsDriver._link)
+				self._tabs_opened += 1
 			except:
 				raise LmsError(WRONG_LINK_ERROR)
 		else:
@@ -47,12 +51,15 @@ class LmsDriver(Driver):
 				print(err)
 				raise LmsError(WRONG_LINK_ERROR)
 			LmsDriver._authorized = True
+			self._press_join_conference_button()
+			time.sleep(5)
+			self._press_audio_only_button()
 		LmsDriver._session_is_running = True
 
 	def turn_off(self):
 		if not LmsDriver._session_is_running:
 			raise LmsError(ALREADY_CLOSED_ERROR)
-		self._browser.close()
+		self.close_all_tabs()
 		LmsDriver._session_is_running = False
 
 	def _authorize(self, username, password):
@@ -79,6 +86,27 @@ class LmsDriver(Driver):
 			raise LmsError(ELEMENT_NOT_FOUND)
 		login_button.click()
 
+	def _press_join_conference_button(self):
+		join_button = self._browser.find_element_by_id("join_button_input")
+		if join_button is None:
+			raise LmsError(ELEMENT_NOT_FOUND)
+		join_button.click()
+		self._tabs_opened += 1
 
 
+	def _press_audio_only_button(self):
+		self._switch_webdriver_tab(1)
+		audio_button = self._browser.find_element_by_xpath('//button[@aria-label="Listen only"]')
+		if audio_button is None:
+			raise LmsError(ELEMENT_NOT_FOUND)
+		audio_button.click()
 
+	def _switch_webdriver_tab(self, id):
+		window_after = self._browser.window_handles[id]
+		self._browser.switch_to.window(window_after)
+
+	def close_all_tabs(self):
+		while self._tabs_opened >= 0:
+			self._switch_webdriver_tab(0)
+			self._browser.close()
+			self._tabs_opened -= 1

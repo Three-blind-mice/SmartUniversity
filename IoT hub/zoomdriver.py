@@ -24,7 +24,7 @@ class ZoomDriver(Driver):
                 self._zoom.wait()
                 self._zoom.poll()
                 time.sleep(3)
-            except:
+            except Exception:
                 raise ZoomError(WRONG_PATH_ERROR)
             self._meeting_id = params['meeting_id']
             self._password = params['password']
@@ -46,6 +46,7 @@ class ZoomDriver(Driver):
         ZoomDriver._press_on_key('enter')
         time.sleep(5)
         ZoomDriver._press_on_button('enter_with_sound_btn.jpg', confidence=0.8)
+
     @staticmethod
     def turn_off():
         if not ZoomDriver._session_is_running:
@@ -67,7 +68,6 @@ class ZoomDriver(Driver):
     def _press_on_button(img_button, confidence=0.):
         btn = pyautogui.locateCenterOnScreen(imgs_path + img_button, confidence=confidence)
         if btn is None:
-            #ZoomDriver._session_is_running = True
             ZoomDriver.turn_off()
             raise ZoomError(BUTTON_ERROR.format(img_button))
         pyautogui.moveTo(btn)
