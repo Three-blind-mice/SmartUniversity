@@ -1,84 +1,112 @@
 from iotdriver import Driver
-from exception import *
-import os
-import json
 from selenium import webdriver
+from exception import LmsError
+from selenium.webdriver.chrome.webdriver import WebDriver
+from settings import *
+import os
+import time
 
 
 class LmsDriver(Driver):
 	"""Драйвер для работы с LMS MAI через браузер и установленный соответсвующий веб-драйвер."""
-	def __init__(self):
-		self.__params_initialized = False
-		self.__running = False
+	_link: object
+	_browser: WebDriver
+	_username = lms_user_login
+	_password = lms_user_password
+	_module_path = str(os.path.realpath(__file__)).split('\\')
+	_driver_path = '/'.join(_module_path[:-1]) + '/' + 'driver.exe'
+	_session_is_running = False
+	_authorized = False
+	_tabs_opened = 0
+
+	def __new__(cls, *args, **kwargs):
+		if not hasattr(cls, '_inst'):
+			cls._inst = super(LmsDriver, cls).__new__(cls)
+		return cls._inst
+
+	def set_session(self, params):
+		if not LmsDriver._session_is_running:
+			print(LmsDriver._driver_path)
+			try:
+				self._browser = webdriver.Chrome(LmsDriver._driver_path)
+			except :
+				raise LmsError(DRIVER_NOT_FOUND_ERROR)
+			self._browser.maximize_window()
+			self._link = params['link']
 
 	def turn_on(self):
-		if self.__running == True:
-			return ALREADY_RUNNING_ERROR
-		try:
-			if self.__params_initialized == False:
-				raise LmsError(LOGGING_IN_WITHOUT_PARAMETERS)
-			self.init_driver("driver")
-			self.browser.get('https://lms.mai.ru/login/index.php')
-			self.autorize(self.__username, self.__password)
-			self.browser.get(self.__link)
-			self.__running = True
-			return SUCCESS_CODE
-		except LmsError as err:
-			print('LMS error: {0}'.format(err.txt))
-			return err.txt
+		if LmsDriver._session_is_running:
+			raise LmsError(ALREADY_RUNNING_ERROR)
+		if LmsDriver._authorized:
+			try:
+				self._browser.get(LmsDriver._link)
+				self._tabs_opened += 1
+			except:
+				raise LmsError(WRONG_LINK_ERROR)
+		else:
+			self._authorize(LmsDriver._username, LmsDriver._password)
+			try:
+				self._browser.get(self._link)
+			except Exception as err:
+				print(err)
+				raise LmsError(WRONG_LINK_ERROR)
+			LmsDriver._authorized = True
+			self._press_join_conference_button()
+			time.sleep(5)
+			self._press_audio_only_button()
+		LmsDriver._session_is_running = True
 
 	def turn_off(self):
-		if not self.__running:
-			return ALREADY_CLOSED_ERROR
-		self.browser.close()
-		return SUCCESS_CODE
+		if not LmsDriver._session_is_running:
+			raise LmsError(ALREADY_CLOSED_ERROR)
+		self.close_all_tabs()
+		LmsDriver._session_is_running = False
 
-	def set_params(self, params):
-		if self.__params_initialized == False:
-			if params['username'] is None or params['password'] is None or params['link'] is None:
-				raise LmsError(WRONG_PARAMETERS)
-			self.__username = params['username']
-			self.__password = params['password']
-			self.__link = params['link']
-			self.__params_initialized = True
-		pass
-		
-	def init_driver(self, driverName):
-		modulepath = os.path.realpath(__file__).split('/')
-		driverpath = modulepath[:-1]
-		driverpath = '/'.join(driverpath) + '/' + driverName
-		self.browser = webdriver.Chrome(driverpath)
-		if self.browser is None:
-			raise LmsError(DRIVER_NOT_FOUND_ERROR)
-		pass
+	def _authorize(self, username, password):
+		self._browser.get('https://lms.mai.ru/login/index.php')
+		self._set_username(username)
+		self._set_password(password)
+		self._press_log_in_button()
 
-	def autorize(self, username, password):
-		self.set_username(username)
-		self.set_password(password)
-		self.press_log_in_button()
-		pass
-  
-	def set_username(self, username):
-		self.set_textbo_text("username", username)
-		pass
+	def _set_username(self, username):
+		self._set_textbox_text("username", username)
 
-	def set_password(self, password):
-		self.set_textbo_text("password", password)
-		pass
+	def _set_password(self, password):
+		self._set_textbox_text("password", password)
 
-	def set_textbo_text(self, textboxName, text):
-		textbox = self.browser.find_element_by_id(textboxName)
+	def _set_textbox_text(self, textboxName, text):
+		textbox = self._browser.find_element_by_id(textboxName)
 		if textbox is None:
 			raise LmsError(ELEMENT_NOT_FOUND)
 		textbox.send_keys(text)
-		pass
 
-	def press_log_in_button(self):
-		login_button = self.browser.find_element_by_id("loginbtn")
+	def _press_log_in_button(self):
+		login_button = self._browser.find_element_by_id("loginbtn")
 		if login_button is None:
 			raise LmsError(ELEMENT_NOT_FOUND)
 		login_button.click()
-		pass
+
+	def _press_join_conference_button(self):
+		join_button = self._browser.find_element_by_id("join_button_input")
+		if join_button is None:
+			raise LmsError(ELEMENT_NOT_FOUND)
+		join_button.click()
+		self._tabs_opened += 1
 
 
+	def _press_audio_only_button(self):
+		self._switch_webdriver_tab(1)
+		audio_button = self._browser.find_element_by_xpath('//button[@aria-label="Listen only"]')
+		if audio_button is None:
+			raise LmsError(ELEMENT_NOT_FOUND)
+		audio_button.click()
 
+	def _switch_webdriver_tab(self, id):
+		window_after = self._browser.window_handles[id]
+		self._browser.switch_to.window(window_after)
+
+	def close_all_tabs(self):
+		while self._tabs_opened >= 0:
+			self._switch_webdriver_tab(0)
+			self._browser.close()
+			self._tabs_opened -= 1
