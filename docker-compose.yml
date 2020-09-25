@@ -1,0 +1,15 @@
+version: '3'
+services:
+    bot:
+        build:
+            dockerfile: Dockerfile
+            context: ./docker_bot
+        depends_on:
+            - "rest"
+        network_mode: "host"
+    rest:
+        build:
+            dockerfile: Dockerfile
+            context: ./Rest
+        ports:
+            - "5000:5000"
