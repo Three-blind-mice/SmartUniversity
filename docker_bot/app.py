@@ -105,16 +105,16 @@ def send_welcome(message):
     if (message.text == '/send') or (message.text == 'Запустить новую трансляцию'):
         msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
         bot.register_next_step_handler(msg, check_platform_step)
-        #url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id)
-        #statement = requests.get(url).text
-#
-        #if statement == "True":
-        #    msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
-        #    bot.register_next_step_handler(msg, check_platform_step)
-        #elif statement == "False":
-        #    bot.send_message(message.chat.id, 'Уходи')
-        #else:
-        #    bot.send_message(message.chat.id, 'Меня сломали')
+        url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id)
+        statement = requests.get(url).text
+
+        if statement == "True":
+            msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
+            bot.register_next_step_handler(msg, check_platform_step)
+        elif statement == "False":
+            bot.send_message(message.chat.id, 'Уходи')
+        else:
+            bot.send_message(message.chat.id, 'Меня сломали')
 
 
 def check_platform_step(message):

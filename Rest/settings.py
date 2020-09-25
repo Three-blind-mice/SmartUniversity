@@ -1,2 +1,2 @@
-REST_HOST = '127.0.0.1'
+REST_HOST = '0.0.0.0'
 REST_PORT = '5000'
