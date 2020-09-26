@@ -29,7 +29,8 @@ class MessageHandler:
     def on_message(self, client, userdata, msg):
         response = ''
         if msg.topic == self._commands_topic:
-            print("{0}: Received message payload: {1}".format(datetime.datetime.now().time(), str(msg.payload)))
+            log_message = "Получено сообщение: {1}".format(str(msg.payload))
+            self._logger.persist(log_message)
             try:
                 message_dictionary = json.loads(msg.payload)
                 driver_key = message_dictionary['driver'].lower()
@@ -50,9 +51,10 @@ class MessageHandler:
                 response = err.txt
             except Exception as err:
                 response = 'Неизвестная ошибка: {0}'.format(err)
-        print('{0}: {1}'.format(datetime.datetime.now().time(), response))
-        self._logger.persist(response)
+
         self.publish_response(response, sender_id)
+        log_responce = 'Отправлен ответ: {1}'.format(response)
+        self._logger.persist(log_responce)
 
     def publish_response(self, response, sender_id):
         json_string = {
@@ -61,17 +63,17 @@ class MessageHandler:
         }
         message = json.dumps(json_string)
         self._client.publish(topic=self._response_topic, payload=message)
-        print('{0}: Sent message: {1} on topic: {2}'.format(datetime.datetime.now().time(), message,
-                                                            self._response_topic))
 
     def on_connect(self, client, userdata, flags, rc):
-        print('{0}: Connected with rc: {1}'.format(datetime.datetime.now().time(), rc))
+        log_connect = 'Код соединения с брокером: {1}'.format(rc)
+        self._logger.persist(log_connect)
         if rc == mqtt.CONNACK_ACCEPTED:
             try:
                 self._client.subscribe(self._commands_topic)
             except Exception as e:
                 print(e)
-            print('{0}: Subscribed on topic: {1}'.format(datetime.datetime.now().time(), self._commands_topic))
+            log_subscribe = 'Оформлена подписка на топик: {1}'.format(self._commands_topic)
+            self._logger.persist(log_subscribe)
 
     def get_message(self):
         self._client.loop()
