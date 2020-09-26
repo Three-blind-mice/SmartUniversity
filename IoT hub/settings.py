@@ -15,6 +15,7 @@ imgs_path = 'imgs//'
 #lms settings
 lms_user_login = 'st649687'
 lms_user_password = 'andrey123'
+start_page_lms = 'https://lms.mai.ru/login/index.php'
 #Message handler codes
 MESSAGE_FORMAT_ERROR = 'Неверный формат сообщения'
 UNSUPPORTED_COMMAND_ERROR = 'Данная команда не поддерживается'

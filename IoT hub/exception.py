@@ -1,6 +1,7 @@
 class DriverError(Exception):
     pass
 
+
 class ZoomError(DriverError):
 
     def __init__(self, text):
@@ -8,6 +9,7 @@ class ZoomError(DriverError):
 
     def __str__(self):
         return self.txt
+
 
 class LmsError(DriverError):
 
