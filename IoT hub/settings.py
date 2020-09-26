@@ -20,10 +20,11 @@ MESSAGE_FORMAT_ERROR = 'Неверный формат сообщения'
 UNSUPPORTED_COMMAND_ERROR = 'Данная команда не поддерживается'
 ALREADY_RUNNING_ERROR = 'Сессия уже запущена'
 ALREADY_CLOSED_ERROR = 'Сессия уже завершена'
-#Zoom codes
+SUCCESS_CODE = 'Успешно'
+#Zoom error
 BUTTON_ERROR = 'Возникли проблемы с кнопкой: {}'
 WRONG_PATH_ERROR = 'Не правильно указан путь к Zoom'
-SUCCESS_CODE = 'Успешно'
+MEETING_ID_ERROR = 'Неверно указано поле: ID конференции'
 #Lms error
 LOGGING_IN_WITHOUT_PARAMETERS_ERROR = 'Данные для входа в систуму LMS не предоставдены!'
 WRONG_PARAMETERS_ERROR = 'Невправильно введены параметры входа'
