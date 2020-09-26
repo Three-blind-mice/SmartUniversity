@@ -107,7 +107,7 @@ def send_welcome(message):
     """Бот проверяет наличие пользователя в базе преподавателей, если он там есть, то
     предлагает пользователю выбрать платоформу"""
     if (message.text == '/send') or (message.text == 'Запустить новую трансляцию'):
-        # ЧТОБЫ ЗАРАБОТАЛО С РЕСТОМ - расскоментить следующие 2 строчки, заккоментить 3-ю 
+        # ЧТОБЫ ЗАРАБОТАЛО С РЕСТОМ - раскомментить следующие 2 строчки, закомментить 3-ю 
         # url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id) 
         # statement = requests.get(url).text
         statement = "True"
