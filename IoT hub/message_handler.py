@@ -30,7 +30,8 @@ class MessageHandler:
         response = ''
         if msg.topic == self._commands_topic:
             log_message = "Получено сообщение: {1}".format(str(msg.payload))
-            self._logger.persist(log_message)
+            self._logger.persists(log_message)
+            print('{0}: {1}'.format(datetime.datetime.utcnow(), log_message))
             try:
                 message_dictionary = json.loads(msg.payload)
                 driver_key = message_dictionary['driver'].lower()
@@ -53,8 +54,9 @@ class MessageHandler:
                 response = 'Неизвестная ошибка: {0}'.format(err)
 
         self.publish_response(response, sender_id)
-        log_responce = 'Отправлен ответ: {1}'.format(response)
-        self._logger.persist(log_responce)
+        log_response = 'Отправлен ответ: {1}'.format(response)
+        self._logger.persists(log_response)
+        print('{0}: {1}'.format(datetime.datetime.utcnow(), log_response))
 
     def publish_response(self, response, sender_id):
         json_string = {
@@ -65,15 +67,17 @@ class MessageHandler:
         self._client.publish(topic=self._response_topic, payload=message)
 
     def on_connect(self, client, userdata, flags, rc):
-        log_connect = 'Код соединения с брокером: {1}'.format(rc)
-        self._logger.persist(log_connect)
+        log_connect = 'Код соединения с брокером: {0}'.format(rc)
+        self._logger.persists(log_connect)
+        print('{0}: {1}'.format(datetime.datetime.utcnow(), log_connect))
         if rc == mqtt.CONNACK_ACCEPTED:
             try:
                 self._client.subscribe(self._commands_topic)
             except Exception as e:
                 print(e)
-            log_subscribe = 'Оформлена подписка на топик: {1}'.format(self._commands_topic)
-            self._logger.persist(log_subscribe)
+            log_subscribe = 'Оформлена подписка на топик: {0}'.format(self._commands_topic)
+            self._logger.persists(log_subscribe)
+            print('{0}: {1}'.format(datetime.datetime.utcnow(), log_subscribe))
 
     def get_message(self):
         self._client.loop()

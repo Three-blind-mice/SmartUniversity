@@ -23,5 +23,8 @@ class Logger:
                 }
             }
         ]
-        self.logging.info(json_body)
-        self.influx_client.write_points(json_body)
+        try:
+            self.log.info(json_body)
+            #self.influx_client.write_points(json_body)
+        except Exception as e:
+            print(e)
