@@ -27,6 +27,8 @@ class ZoomDriver(Driver):
             except Exception:
                 raise ZoomError(WRONG_PATH_ERROR)
             self._meeting_id = params['meeting_id']
+            if self._meeting_id < len_zoom_meeting_id:
+                raise ZoomError(MEETING_ID_ERROR)
             self._password = params['password']
 
     def turn_on(self):
