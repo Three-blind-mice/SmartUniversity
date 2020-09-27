@@ -10,6 +10,15 @@ user_dict = {}
 client = mqtt.Client()
 
 
+class ZoomMessageLink:
+    """Класс для хранения данных при запуске трансляции на плафторе ZOOM"""
+
+    def __init__(self, name):
+        self.platform = name
+        self.aud = None
+        self.link = None
+
+
 class ZoomMessage:
     """Класс для хранения данных при запуске трансляции на плафторе ZOOM"""
 
@@ -85,6 +94,17 @@ def keyboard_4():
     return markup
 
 
+def keyboard_5():
+    # кнопка остановки трансялции
+    markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    btn1 = types.KeyboardButton("По ссылке")
+    btn2 = types.KeyboardButton("По логину и паролю")
+    btn3 = types.KeyboardButton("Выйти")
+    markup.add(btn1, btn2)
+    markup.add(btn3)
+    return markup
+
+
 @bot.message_handler(commands=['start'])
 def welcome(message):
     sti = open('bot_hello_sticker.tgs', 'rb')
@@ -107,8 +127,8 @@ def send_welcome(message):
     """Бот проверяет наличие пользователя в базе преподавателей, если он там есть, то
     предлагает пользователю выбрать платоформу"""
     if (message.text == '/send') or (message.text == 'Запустить новую трансляцию'):
-        # ЧТОБЫ ЗАРАБОТАЛО С РЕСТОМ - раскомментить следующие 2 строчки, закомментить 3-ю 
-        # url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id) 
+        # ЧТОБЫ ЗАРАБОТАЛО С РЕСТОМ - расскоментить следующие 2 строчки, заккоментить 3-ю
+        # url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id)
         # statement = requests.get(url).text
         statement = "True"
 
@@ -127,13 +147,10 @@ def check_platform_step(message):
     try:
         if message.text != 'Выйти':
             if message.text == 'ZOOM':
-                chat_id = message.chat.id
-                platform = message.text
-                send = ZoomMessage(platform)
-                user_dict[chat_id] = send
-                msg = bot.send_message(message.chat.id, 'Введите номер аудитории: ', reply_markup=keyboard_3())
+                msg = bot.send_message(message.chat.id, 'По "ссылке" или по "логинку и паролю"?',
+                                       reply_markup=keyboard_5())
                 bot.register_next_step_handler(msg,
-                                               zoom_process_aud_step)  # посылает на следующий шаг последовательности ZOOM
+                                               zoom_link_or_login)
             elif message.text == 'LMS.MAI':
                 chat_id = message.chat.id
                 platform = message.text
@@ -141,7 +158,8 @@ def check_platform_step(message):
                 user_dict[chat_id] = send
                 msg = bot.send_message(message.chat.id, 'Введите номер аудитории: ', reply_markup=keyboard_3())
                 bot.register_next_step_handler(msg,
-                                               lms_process_aud_step)  # посылает на следующий шаг последовательности LMS.MAI
+                                               lms_process_aud_step)  # посылает на следующий шаг последовательности
+                # LMS.MAI
             else:
                 msg = bot.send_message(message.chat.id, 'Пожалуйста, воспользуйтесь кнопками внизу диалога!',
                                        reply_markup=keyboard_2())
@@ -154,7 +172,103 @@ def check_platform_step(message):
         bot.reply_to(message, 'oooops')
 
 
-"""Начало последовательности для платформы ZOOM"""
+def zoom_link_or_login(message):
+    try:
+        if message.text != 'Выйти':
+            if message.text == 'По ссылке':
+                chat_id = message.chat.id
+                platform = 'ZOOM_link'
+                send = ZoomMessageLink(platform)
+                user_dict[chat_id] = send
+                msg = bot.send_message(message.chat.id, 'Введите номер аудитории: ', reply_markup=keyboard_3())
+                bot.register_next_step_handler(msg,
+                                               zoom_link_process_aud_step)
+            elif message.text == 'По логину и паролю':
+                chat_id = message.chat.id
+                platform = 'ZOOM'
+                send = ZoomMessage(platform)
+                user_dict[chat_id] = send
+                msg = bot.send_message(message.chat.id, 'Введите номер аудитории: ', reply_markup=keyboard_3())
+                bot.register_next_step_handler(msg,
+                                               zoom_process_aud_step)
+            else:
+                msg = bot.send_message(message.chat.id, 'Пожалуйста, воспользуйтесь кнопками внизу диалога!',
+                                       reply_markup=keyboard_5())
+                bot.register_next_step_handler(msg, zoom_link_or_login)
+        else:
+            sti = open('bot_menu_sticker.tgs', 'rb')
+            bot.send_message(message.chat.id, 'Чем займемся?')
+            bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
+
+
+"""-----Начало последовательности для платформы ZOOM по ссылке-----"""
+
+
+def zoom_link_process_aud_step(message):
+    try:
+        if message.text != 'Выйти':
+            chat_id = message.chat.id
+            aud = message.text
+            send = user_dict[chat_id]
+            send.aud = aud
+            msg = bot.send_message(message.chat.id, 'Вставьте ссылку на трансляцию: ', reply_markup=keyboard_3())
+            bot.register_next_step_handler(msg, zoom_link_link_step)
+        else:
+            sti = open('bot_menu_sticker.tgs', 'rb')
+            bot.send_message(message.chat.id, 'Чем займемся?')
+            bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
+
+
+def zoom_link_link_step(message):
+    try:
+        if message.text != 'Выйти':
+            chat_id = message.chat.id
+            link = str(message.text)
+
+            send = user_dict[chat_id]
+            send.link = link
+            mqtt_message = '{"id":"' + str(chat_id) + '","driver": "' + str(
+                send.platform) + '", "command": "ON", "params": {"link": "' + str(send.link) + '"}}'
+            topik = 'smart_university/' + str(send.aud) + '/execute_comand'
+            client.publish(topik, mqtt_message)
+            msg = bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard_4())
+            bot.register_next_step_handler(msg, zoom_link_end_step)
+        else:
+            sti = open('bot_menu_sticker.tgs', 'rb')
+            bot.send_message(message.chat.id, 'Чем займемся?')
+            bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
+
+
+def zoom_link_end_step(message):
+    try:
+        if message.text == 'Остановить трансляцию':
+            chat_id = message.chat.id
+            send = user_dict[chat_id]
+            mqtt_message = '{"id":"' + str(chat_id) + '","driver": "' + str(
+                send.platform) + '", "command": "OFF", "params": {"link": "' + str(
+                send.link) + '"}}'
+
+            topik = 'smart_university/' + str(send.aud) + '/execute_comand'
+            client.publish(topik, mqtt_message)
+            bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard())
+        else:
+            pass
+            sti = open('bot_menu_sticker.tgs', 'rb')
+            bot.send_message(message.chat.id, 'Чем займемся?')
+            bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
+
+
+"""_____Конец последовательности для платформы ZOOM по ссылке_____"""
+
+"""-----Начало последовательности для платформы ZOOM по логину и паролю-----"""
 
 
 def zoom_process_aud_step(message):
@@ -234,9 +348,9 @@ def zoom_process_end_step(message):
         bot.reply_to(message, 'oooops')
 
 
-"""Конец последовательности для платформы ZOOM"""
+"""_____Конец последовательности для платформы ZOOM_____"""
 
-"""Начало последовательности для платформы LMS.MAI"""
+"""-----Начало последовательности для платформы LMS.MAI-----"""
 
 
 def lms_process_aud_step(message):
@@ -299,7 +413,7 @@ def lms_process_end_step(message):
         bot.reply_to(message, 'oooops')
 
 
-"""Конец последовательности для платформы LMS.MAI"""
+"""_____Конец последовательности для платформы LMS.MAI_____"""
 
 bot.enable_save_next_step_handlers(delay=1)
 
