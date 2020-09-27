@@ -95,7 +95,7 @@ def keyboard_4():
 
 
 def keyboard_5():
-    # кнопка остановки трансялции
+    # выбор
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("По ссылке")
     btn2 = types.KeyboardButton("По логину и паролю")
