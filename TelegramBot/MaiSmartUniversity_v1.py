@@ -38,7 +38,7 @@ class LmsMessage:
         self.link = None
 
 
-def on_connect(clinet, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc):
     print("Connected with Code :" + str(rc))
     client.subscribe("smart_university/response/#")  # Бот подписывается на топик для обратной свзяи
 
