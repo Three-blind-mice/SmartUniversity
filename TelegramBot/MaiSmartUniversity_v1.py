@@ -11,7 +11,7 @@ client = mqtt.Client()
 
 
 class ZoomMessageLink:
-    """Класс для хранения данных при запуске трансляции на плафторе ZOOM"""
+    """Класс для хранения данных при запуске трансляции на плафторе ZOOM по ссылке"""
 
     def __init__(self, name):
         self.platform = name
@@ -20,7 +20,7 @@ class ZoomMessageLink:
 
 
 class ZoomMessage:
-    """Класс для хранения данных при запуске трансляции на плафторе ZOOM"""
+    """Класс для хранения данных при запуске трансляции на плафторе ZOOM по логину и паролю"""
 
     def __init__(self, name):
         self.platform = name
@@ -95,7 +95,7 @@ def keyboard_4():
 
 
 def keyboard_5():
-    # кнопка остановки трансялции
+    # выбор у ZOOM
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("По ссылке")
     btn2 = types.KeyboardButton("По логину и паролю")
@@ -127,18 +127,17 @@ def send_welcome(message):
     """Бот проверяет наличие пользователя в базе преподавателей, если он там есть, то
     предлагает пользователю выбрать платоформу"""
     if (message.text == '/send') or (message.text == 'Запустить новую трансляцию'):
-        # ЧТОБЫ ЗАРАБОТАЛО С РЕСТОМ - расскоментить следующие 2 строчки, заккоментить 3-ю
-        # url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id)
+        # url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id) - расскоментить, чтобы включить проверку через RESt
         # statement = requests.get(url).text
-        statement = "True"
+        statement = "True" #любому пользователю разрешен вход,Rest не используется
 
         if statement == "True":
             msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
             bot.register_next_step_handler(msg, check_platform_step)
         elif statement == "False":
-            bot.send_message(message.chat.id, 'Уходи')
+            bot.send_message(message.chat.id, 'Вам запрещен доступ')
         else:
-            bot.send_message(message.chat.id, 'Меня сломали')
+            bot.send_message(message.chat.id, 'Меня сломали') #УБРАТЬ - поменять на try except
 
 
 def check_platform_step(message):
@@ -258,7 +257,6 @@ def zoom_link_end_step(message):
             client.publish(topik, mqtt_message)
             bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard())
         else:
-            pass
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
@@ -340,7 +338,6 @@ def zoom_process_end_step(message):
             client.publish(topik, mqtt_message)
             bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard())
         else:
-            pass
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
@@ -405,7 +402,6 @@ def lms_process_end_step(message):
             client.publish(topik, mqtt_message)
             bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard())
         else:
-            pass
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
