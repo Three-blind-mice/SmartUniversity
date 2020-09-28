@@ -11,7 +11,6 @@ client = mqtt.Client()
 
 
 class ZoomMessageLink:
-    """Класс для хранения данных при запуске трансляции на плафторе ZOOM"""
 
     def __init__(self, name):
         self.platform = name
@@ -20,7 +19,6 @@ class ZoomMessageLink:
 
 
 class ZoomMessage:
-    """Класс для хранения данных при запуске трансляции на плафторе ZOOM"""
 
     def __init__(self, name):
         self.platform = name
@@ -30,7 +28,6 @@ class ZoomMessage:
 
 
 class LmsMessage:
-    """Класс для хранения данных при запуске трансляции на плафторе LMS.MAI"""
 
     def __init__(self, name):
         self.platform = name
@@ -38,15 +35,15 @@ class LmsMessage:
         self.link = None
 
 
-def on_connect(clinet, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc):
     print("Connected with Code :" + str(rc))
-    client.subscribe("smart_university/response/#")  # Бот подписывается на топик для обратной свзяи
+    client.subscribe("smart_university/response/#")
 
 
 def on_message(client, userdata, msg):
     callback = json.loads(msg.payload.decode("utf-8", "ignore"))
     bot.send_message(int(callback['id']),
-                     str(callback['answer']))  # Получает из обратной связи id и сообщение, посылает его пользователю
+                     str(callback['answer']))
 
 
 client.on_connect = on_connect
@@ -59,7 +56,6 @@ client.loop_start()
 
 
 def keyboard():
-    # клавиатура для приветсвия
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("Запустить новую трансляцию")
     btn2 = types.KeyboardButton("/help")
@@ -68,7 +64,6 @@ def keyboard():
 
 
 def keyboard_2():
-    # клавиатура для выбора платформы
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("ZOOM")
     btn2 = types.KeyboardButton("LMS.MAI")
@@ -79,7 +74,6 @@ def keyboard_2():
 
 
 def keyboard_3():
-    # кнопка для выхода
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("Выйти")
     markup.add(btn1)
@@ -87,7 +81,6 @@ def keyboard_3():
 
 
 def keyboard_4():
-    # кнопка остановки трансялции
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("Остановить трансляцию")
     markup.add(btn1)
@@ -95,7 +88,6 @@ def keyboard_4():
 
 
 def keyboard_5():
-    # выбор
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("По ссылке")
     btn2 = types.KeyboardButton("По логину и паролю")
@@ -123,27 +115,24 @@ def help_info(message):
 
 
 @bot.message_handler(content_types=['text'])
-def send_welcome(message):
-    """Бот проверяет наличие пользователя в базе преподавателей, если он там есть, то
-    предлагает пользователю выбрать платоформу"""
+def welcome(message):
     if (message.text == '/send') or (message.text == 'Запустить новую трансляцию'):
-        # ЧТОБЫ ЗАРАБОТАЛО С РЕСТОМ - расскоментить следующие 2 строчки, заккоментить 3-ю
-        # url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id)
-        # statement = requests.get(url).text
-        statement = "True"
 
-        if statement == "True":
-            msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
-            bot.register_next_step_handler(msg, check_platform_step)
-        elif statement == "False":
-            bot.send_message(message.chat.id, 'Уходи')
-        else:
-            bot.send_message(message.chat.id, 'Меня сломали')
+        url ="http://"+config.REST_SERVER+":"+config.REST_PORT+"/users_list/"+str(message.chat.id)
+        statement = requests.get(url).text
+        #statement = "True"
+
+        try:
+            if statement == "True":
+                msg = bot.send_message(message.chat.id, 'Какую платформу выберете?', reply_markup=keyboard_2())
+                bot.register_next_step_handler(msg, check_platform_step)
+            elif statement == "False":
+                bot.send_message(message.chat.id, 'Вам закрыт доступ')
+        except:
+            bot.reply_to(message, 'oooops')
 
 
 def check_platform_step(message):
-    """В зависимости от выбора пользователя начинает определенную последователньость действий"""
-
     try:
         if message.text != 'Выйти':
             if message.text == 'ZOOM':
@@ -158,8 +147,7 @@ def check_platform_step(message):
                 user_dict[chat_id] = send
                 msg = bot.send_message(message.chat.id, 'Введите номер аудитории: ', reply_markup=keyboard_3())
                 bot.register_next_step_handler(msg,
-                                               lms_process_aud_step)  # посылает на следующий шаг последовательности
-                # LMS.MAI
+                                               lms_process_aud_step)
             else:
                 msg = bot.send_message(message.chat.id, 'Пожалуйста, воспользуйтесь кнопками внизу диалога!',
                                        reply_markup=keyboard_2())
@@ -168,7 +156,7 @@ def check_platform_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -199,11 +187,8 @@ def zoom_link_or_login(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
-
-
-"""-----Начало последовательности для платформы ZOOM по ссылке-----"""
 
 
 def zoom_link_process_aud_step(message):
@@ -219,7 +204,7 @@ def zoom_link_process_aud_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -241,7 +226,7 @@ def zoom_link_link_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -258,17 +243,11 @@ def zoom_link_end_step(message):
             client.publish(topik, mqtt_message)
             bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard())
         else:
-            pass
-            sti = open('bot_menu_sticker.tgs', 'rb')
-            bot.send_message(message.chat.id, 'Чем займемся?')
-            bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+            msg = bot.send_message(message.chat.id, 'Для начала вы должны закончить трансляцию! Нажмите на кнопку внизу диалога',
+                                   reply_markup=keyboard_4())
+            bot.register_next_step_handler(msg, zoom_link_end_step)
+    except:
         bot.reply_to(message, 'oooops')
-
-
-"""_____Конец последовательности для платформы ZOOM по ссылке_____"""
-
-"""-----Начало последовательности для платформы ZOOM по логину и паролю-----"""
 
 
 def zoom_process_aud_step(message):
@@ -284,7 +263,7 @@ def zoom_process_aud_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -301,7 +280,7 @@ def zoom_process_login_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -323,7 +302,7 @@ def zoom_process_password_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -340,17 +319,12 @@ def zoom_process_end_step(message):
             client.publish(topik, mqtt_message)
             bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard())
         else:
-            pass
-            sti = open('bot_menu_sticker.tgs', 'rb')
-            bot.send_message(message.chat.id, 'Чем займемся?')
-            bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+            msg = bot.send_message(message.chat.id,
+                                   'Для начала вы должны закончить трансляцию! Нажмите на кнопку внизу диалога',
+                                   reply_markup=keyboard_4())
+            bot.register_next_step_handler(msg, zoom_process_end_step)
+    except:
         bot.reply_to(message, 'oooops')
-
-
-"""_____Конец последовательности для платформы ZOOM_____"""
-
-"""-----Начало последовательности для платформы LMS.MAI-----"""
 
 
 def lms_process_aud_step(message):
@@ -366,7 +340,7 @@ def lms_process_aud_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -388,7 +362,7 @@ def lms_process_link_step(message):
             sti = open('bot_menu_sticker.tgs', 'rb')
             bot.send_message(message.chat.id, 'Чем займемся?')
             bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+    except:
         bot.reply_to(message, 'oooops')
 
 
@@ -405,15 +379,13 @@ def lms_process_end_step(message):
             client.publish(topik, mqtt_message)
             bot.send_message(chat_id, 'Запрос отправлен!', reply_markup=keyboard())
         else:
-            pass
-            sti = open('bot_menu_sticker.tgs', 'rb')
-            bot.send_message(message.chat.id, 'Чем займемся?')
-            bot.send_sticker(message.chat.id, sti, reply_markup=keyboard())
-    except Exception as e:
+            msg = bot.send_message(message.chat.id,
+                                   'Для начала вы должны закончить трансляцию! Нажмите на кнопку внизу диалога',
+                                   reply_markup=keyboard_4())
+            bot.register_next_step_handler(msg, lms_process_end_step)
+    except:
         bot.reply_to(message, 'oooops')
 
-
-"""_____Конец последовательности для платформы LMS.MAI_____"""
 
 bot.enable_save_next_step_handlers(delay=1)
 
