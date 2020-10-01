@@ -1,24 +1,25 @@
-from flask import Flask, json, jsonify
+import pymysql
+from flask import Flask, g, request
+from flask_mysqldb import MySQL
 from settings import *
 
 app = Flask(__name__)
-
-def check(id) -> str: # Проверка на наличие в списке
-	with open('users_list.json') as f:
-		users_list = json.load(f)
-	id = str(id)
-	for user in users_list:
-		if user["id"] == id:
-			return 'True'
-	return 'False'
-
-@app.route('/users_list/', methods=['GET'])
-def get_list():
-	return jsonify(users_list)
+app.config['MYSQL_USER'] = 'user'
+app.config['MYSQL_PASSWORD'] = 'pass'
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_DB'] = 'smartuniversity_users'
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+mysql = MySQL(app)
 
 @app.route('/users_list/<id>', methods=['GET'])
 def get_user(id):
-	return check(id)
+	cursor = mysql.connection.cursor()
+	cursor.execute('''SELECT name FROM users WHERE telegram_id = %d''' % int(id))
+	result = cursor.fetchone()
+	if result:
+		return 'True\n{}'.format(result['name'])
+	else:
+		return 'False'
 
 if __name__ == '__main__':
 	app.run(host = REST_HOST, port = REST_PORT)
