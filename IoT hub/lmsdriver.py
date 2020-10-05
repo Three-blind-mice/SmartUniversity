@@ -8,7 +8,6 @@ import time
 
 
 class LmsDriver(Driver):
-	"""Драйвер для работы с LMS MAI через браузер и установленный соответсвующий веб-драйвер."""
 	_link: object
 	_browser: WebDriver
 	_username = lms_user_login
@@ -29,7 +28,7 @@ class LmsDriver(Driver):
 			print(LmsDriver._driver_path)
 			try:
 				self._browser = webdriver.Chrome(LmsDriver._driver_path)
-			except :
+			except Exception:
 				raise LmsError(DRIVER_NOT_FOUND_ERROR)
 			self._browser.maximize_window()
 			self._link = params['link']
@@ -41,7 +40,7 @@ class LmsDriver(Driver):
 			try:
 				self._browser.get(LmsDriver._link)
 				self._tabs_opened += 1
-			except:
+			except Exception:
 				raise LmsError(WRONG_LINK_ERROR)
 		else:
 			self._authorize(LmsDriver._username, LmsDriver._password)
@@ -63,7 +62,7 @@ class LmsDriver(Driver):
 		LmsDriver._session_is_running = False
 
 	def _authorize(self, username, password):
-		self._browser.get('https://lms.mai.ru/login/index.php')
+		self._browser.get(start_page_lms)
 		self._set_username(username)
 		self._set_password(password)
 		self._press_log_in_button()
@@ -92,7 +91,6 @@ class LmsDriver(Driver):
 			raise LmsError(ELEMENT_NOT_FOUND)
 		join_button.click()
 		self._tabs_opened += 1
-
 
 	def _press_audio_only_button(self):
 		self._switch_webdriver_tab(1)

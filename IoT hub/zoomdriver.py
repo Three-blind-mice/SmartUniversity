@@ -27,6 +27,8 @@ class ZoomDriver(Driver):
             except Exception:
                 raise ZoomError(WRONG_PATH_ERROR)
             self._meeting_id = params['meeting_id']
+            if len(self._meeting_id) < len_zoom_meeting_id:
+                raise ZoomError(MEETING_ID_ERROR)
             self._password = params['password']
 
     def turn_on(self):
@@ -35,14 +37,14 @@ class ZoomDriver(Driver):
         ZoomDriver._session_is_running = True
         ZoomDriver._press_on_button('join_btn.png', confidence=0.9)
         time.sleep(3)
-        ZoomDriver._press_on_button('meeting_id_button.png', confidence=0.5)
+        ZoomDriver._press_on_button('meeting_id_button.png', confidence=0.6)
         ZoomDriver._write_on_fild(self._meeting_id)
-        time.sleep(2)
+        time.sleep(3)
         ZoomDriver._press_on_key('enter')
-        time.sleep(2)
+        time.sleep(3)
         ZoomDriver._press_on_button('password_btn.jpg', confidence=0.9)
         ZoomDriver._write_on_fild(self._password)
-        time.sleep(2)
+        time.sleep(3)
         ZoomDriver._press_on_key('enter')
         time.sleep(5)
         ZoomDriver._press_on_button('enter_with_sound_btn.jpg', confidence=0.8)
