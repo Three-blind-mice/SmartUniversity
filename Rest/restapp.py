@@ -16,7 +16,6 @@ def get_user(id):
 	cursor = mysql.connection.cursor()
 	try:
 		cursor.execute('''SELECT %s FROM %s WHERE %s = %d''' % (MYSQL_USERNAME_COLUMN_NAME, MYSQL_TALBE_NAME, MYSQL_TELEGRAM_ID_COLUMN_NAME, int(id)))
-		cursor.execute('''SELECT name FROM users WHERE telegram_id = %d''' % int(id))
 		result = cursor.fetchone()
 		if result:
 			return 'True\n{}'.format(result['name'])
