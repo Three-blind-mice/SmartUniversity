@@ -11,5 +11,4 @@ services:
         build:
             dockerfile: Dockerfile
             context: ./Rest
-        ports:
-            - "5000:5000"
+        network_mode: "host"

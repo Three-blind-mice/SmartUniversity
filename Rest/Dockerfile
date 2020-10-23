@@ -6,5 +6,5 @@ WORKDIR /usr/scr/app/
 COPY . /usr/scr/app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python","restapp.py"]
+CMD ["python","restapp.py", "--host", "0.0.0.0"]
 

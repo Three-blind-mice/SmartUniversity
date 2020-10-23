@@ -71,7 +71,7 @@ def keyboard_2():
     # клавиатура для выбора платформы
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     btn1 = types.KeyboardButton("ZOOM")
-    btn2 = types.KeyboardButton("LMS.MAI")
+    btn2 = types.KeyboardButton("LMS")
     btn3 = types.KeyboardButton("Выйти")
     markup.add(btn1, btn2)
     markup.add(btn3)
@@ -150,7 +150,7 @@ def check_platform_step(message):
                                        reply_markup=keyboard_5())
                 bot.register_next_step_handler(msg,
                                                zoom_link_or_login)
-            elif message.text == 'LMS.MAI':
+            elif message.text == 'LMS':
                 chat_id = message.chat.id
                 platform = message.text
                 send = LmsMessage(platform)
