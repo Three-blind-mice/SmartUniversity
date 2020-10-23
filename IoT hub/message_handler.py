@@ -39,10 +39,12 @@ class MessageHandler:
                 params = message_dictionary['params']
                 sender_id = message_dictionary['id']
                 driver = self._driver_dict[driver_key]()
-                if command in self._commands_dictionary:
-                    driver.set_session(params)
-                    method = self._commands_dictionary[command](driver)
-                    method()
+                if command is 'ON':
+                    driver.set_session()
+                    driver.turn_on(params)
+                    response = 'Команда {0} была успешно выполнена'.format(command)
+                elif command is 'OFF':
+                    driver.turn_off()
                     response = 'Команда {0} была успешно выполнена'.format(command)
                 else:
                     response = 'Команда {0} не поддерживатся'.format(command)
