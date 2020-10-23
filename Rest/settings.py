@@ -4,7 +4,6 @@ REST_PORT = '5000'
 MYSQL_USER = 'user'
 MYSQL_PASSWORD = 'pass'
 MYSQL_HOST = 'localhost'
-MYSQL_PORT = 3306
 MYSQL_DB = 'smartuniversity_users'
 MYSQL_TALBE_NAME = 'users'
 MYSQL_USERNAME_COLUMN_NAME = 'name'
