@@ -12,12 +12,15 @@ mysql = MySQL(app)
 
 @app.route('/users_list/<id>', methods=['GET'])
 def get_user(id):
+	'''
+		Возващает ответ "True" или "False" о наличии телеграм айди id в базе данных преподавателей.
+	'''
 	cursor = mysql.connection.cursor()
 	try:
 		cursor.execute('''SELECT %s FROM %s WHERE %s = %d''' % (MYSQL_USERNAME_COLUMN_NAME, MYSQL_TALBE_NAME, MYSQL_TELEGRAM_ID_COLUMN_NAME, int(id)))
 		result = cursor.fetchone()
 		if result:
-			return 'True\n{}'.format(result['name'])
+			return 'True'
 		else:
 			return 'False'
 	except:
